@@ -4,26 +4,34 @@ namespace Absolute\Module\Project\Presenter;
 
 use Nette\Http\Response;
 use Nette\Application\Responses\JsonResponse;
-use Absolute\Core\Presenter\BaseRestPresenter; 
+use Absolute\Core\Presenter\BaseRestPresenter;
 
-class LabelPresenter extends ProjectBasePresenter {
+class LabelPresenter extends ProjectBasePresenter
+{
 
     /** @var \Absolute\Module\Label\Manager\LabelManager @inject */
     public $labelManager;
 
-    public function startup() {
+    public function startup()
+    {
         parent::startup();
     }
 
-    public function renderDefault($resourceId, $subResourceId) {
-        switch ($this->httpRequest->getMethod()) {
+    public function renderDefault($resourceId, $subResourceId)
+    {
+        switch ($this->httpRequest->getMethod())
+        {
             case 'GET':
-                if (!isset($resourceId)) 
+                if (!isset($resourceId))
                     $this->httpResponse->setCode(Response::S400_BAD_REQUEST);
-                 else {
-                    if (isset($subResourceId)) {
+                else
+                {
+                    if (isset($subResourceId))
+                    {
                         $this->_getProjectLabelRequest($resourceId, $subResourceId);
-                    } else {
+                    }
+                    else
+                    {
                         $this->_getProjectLabelListRequest($resourceId);
                     }
                 }
@@ -40,57 +48,51 @@ class LabelPresenter extends ProjectBasePresenter {
                 $this->jsonResponse->toJson(), "application/json;charset=utf-8"
         ));
     }
+
     //Project
-    private function _getProjectLabelListRequest($idProject) {
+    private function _getProjectLabelListRequest($idProject)
+    {
         $projectsList = $this->labelManager->getProjectList($idProject);
-        if(!$projectsList){
+        if (!$projectsList)
             $this->httpResponse->setCode(Response::S404_NOT_FOUND);
-        }else{
-            $this->jsonResponse->payload = $projectsList;
+        else
+        {
+            $this->jsonResponse->payload = array_map(function($n)
+            {
+                return $n->toJson();
+            }, $projectsList);
             $this->httpResponse->setCode(Response::S200_OK);
-            
         }
     }
 
-    private function _getProjectLabelRequest($projectId, $labelId) {
-        $ret=$this->labelManager->getProjectItem($projectId,$labelId);
-        if(!$ret){
+    private function _getProjectLabelRequest($projectId, $labelId)
+    {
+        $ret = $this->labelManager->getProjectItem($projectId, $labelId);
+        if (!$ret)
             $this->httpResponse->setCode(Response::S404_NOT_FOUND);
-        }else{
-            $this->jsonResponse->payload = $ret;
+        else
+        {
+            $this->jsonResponse->payload = $ret->toJson();
             $this->httpResponse->setCode(Response::S200_OK);
-            
         }
     }
 
-    private function _postProjectLabelRequest($urlId, $urlId2) {
-        if(!isset($urlId)||!isset($urlId2)){
-            $this->httpResponse->setCode(Response::S400_BAD_REQUEST);
-            return;
-        }
+    private function _postProjectLabelRequest($urlId, $urlId2)
+    {
         $ret = $this->labelManager->labelProjectCreate($urlId, $urlId2);
-        if (!$ret) {
-            $this->jsonResponse->payload = [];
+        if (!$ret)
             $this->httpResponse->setCode(Response::S500_INTERNAL_SERVER_ERROR);
-        } else {
-            $this->jsonResponse->payload = [];
+        else
             $this->httpResponse->setCode(Response::S201_CREATED);
-        }
     }
 
-    private function _deleteProjectLabelRequest($urlId, $urlId2) {
-        if(!isset($urlId)||!isset($urlId2)){
-            $this->httpResponse->setCode(Response::S400_BAD_REQUEST);
-            return;
-        }
+    private function _deleteProjectLabelRequest($urlId, $urlId2)
+    {
         $ret = $this->labelManager->labelProjectDelete($urlId, $urlId2);
-        if (!$ret) {
-            $this->jsonResponse->payload = [];
+        if (!$ret)
             $this->httpResponse->setCode(Response::S404_NOT_FOUND);
-        } else {
-            $this->jsonResponse->payload = [];
+        else
             $this->httpResponse->setCode(Response::S200_OK);
-        }
     }
 
 }
