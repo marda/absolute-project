@@ -6,7 +6,7 @@ use Nette\Http\Response;
 use Nette\Application\Responses\JsonResponse;
 use Absolute\Core\Presenter\BaseRestPresenter; 
 
-class DefaultPresenter extends ProjectBasePresenter {
+class LabelPresenter extends ProjectBasePresenter {
 
     /** @var \Absolute\Module\Label\Manager\LabelManager @inject */
     public $labelManager;
@@ -15,24 +15,24 @@ class DefaultPresenter extends ProjectBasePresenter {
         parent::startup();
     }
 
-    public function renderLabel($urlId, $urlId2) {
+    public function renderDefault($resourceId, $subResourceId) {
         switch ($this->httpRequest->getMethod()) {
             case 'GET':
-                if (!isset($urlId)) 
+                if (!isset($resourceId)) 
                     $this->httpResponse->setCode(Response::S400_BAD_REQUEST);
                  else {
-                    if (isset($urlId2)) {
-                        $this->_getProjectLabelRequest($urlId, $urlId2);
+                    if (isset($subResourceId)) {
+                        $this->_getProjectLabelRequest($resourceId, $subResourceId);
                     } else {
-                        $this->_getProjectLabelListRequest($urlId);
+                        $this->_getProjectLabelListRequest($resourceId);
                     }
                 }
                 break;
             case 'POST':
-                $this->_postProjectLabelRequest($urlId, $urlId2);
+                $this->_postProjectLabelRequest($resourceId, $subResourceId);
                 break;
             case 'DELETE':
-                $this->_deleteProjectLabelRequest($urlId, $urlId2);
+                $this->_deleteProjectLabelRequest($resourceId, $subResourceId);
             default:
                 break;
         }
