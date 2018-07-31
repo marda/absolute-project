@@ -6,16 +6,21 @@ use Nette\Http\Response;
 use Nette\Application\Responses\JsonResponse;
 use Absolute\Core\Presenter\BaseRestPresenter;
 
-class LabelPresenter extends ProjectBasePresenter
+class TodoPresenter extends ProjectBasePresenter
 {
 
-    /** @var \Absolute\Module\Label\Manager\LabelManager @inject */
-    public $labelManager;
+    /** @var \Absolute\Module\Todo\Manager\TodoManager @inject */
+    public $todoManager;
+
+    /** @var \Absolute\Module\Project\Manager\ProjectManager @inject */
+    public $projectManager;
 
     public function startup()
     {
         parent::startup();
     }
+
+    //LABEL
 
     public function renderDefault($resourceId, $subResourceId)
     {
@@ -28,19 +33,19 @@ class LabelPresenter extends ProjectBasePresenter
                 {
                     if (isset($subResourceId))
                     {
-                        $this->_getProjectLabelRequest($resourceId, $subResourceId);
+                        $this->_getTodoRequest($resourceId, $subResourceId);
                     }
                     else
                     {
-                        $this->_getProjectLabelListRequest($resourceId);
+                        $this->_getTodoListRequest($resourceId);
                     }
                 }
                 break;
             case 'POST':
-                $this->_postProjectLabelRequest($resourceId, $subResourceId);
+                $this->_postTodoRequest($resourceId, $subResourceId);
                 break;
             case 'DELETE':
-                $this->_deleteProjectLabelRequest($resourceId, $subResourceId);
+                $this->_deleteTodoRequest($resourceId, $subResourceId);
             default:
                 break;
         }
@@ -49,25 +54,24 @@ class LabelPresenter extends ProjectBasePresenter
         ));
     }
 
-    //Project
-    private function _getProjectLabelListRequest($idProject)
+    private function _getTodoListRequest($idProject)
     {
-        $projectsList = $this->labelManager->getProjectList($idProject);
-        if (!$projectsList)
+        $ret = $this->todoManager->getProjectList($idProject);
+        if (!$ret)
             $this->httpResponse->setCode(Response::S404_NOT_FOUND);
         else
         {
             $this->jsonResponse->payload = array_map(function($n)
             {
                 return $n->toJson();
-            }, $projectsList);
+            }, $ret);
             $this->httpResponse->setCode(Response::S200_OK);
         }
     }
 
-    private function _getProjectLabelRequest($projectId, $labelId)
+    private function _getTodoRequest($projectId, $todoId)
     {
-        $ret = $this->labelManager->getProjectItem($projectId, $labelId);
+        $ret = $this->todoManager->getProjectItem($projectId, $todoId);
         if (!$ret)
             $this->httpResponse->setCode(Response::S404_NOT_FOUND);
         else
@@ -77,28 +81,28 @@ class LabelPresenter extends ProjectBasePresenter
         }
     }
 
-    private function _postProjectLabelRequest($urlId, $urlId2)
+    private function _postTodoRequest($urlId, $urlId2)
     {
         if (!isset($urlId) || !isset($urlId2))
         {
             $this->httpResponse->setCode(Response::S400_BAD_REQUEST);
             return;
         }
-        $ret = $this->labelManager->labelProjectCreate($urlId, $urlId2);
+        $ret = $this->todoManager->todoProjectCreate($urlId, $urlId2);
         if (!$ret)
             $this->httpResponse->setCode(Response::S500_INTERNAL_SERVER_ERROR);
         else
             $this->httpResponse->setCode(Response::S201_CREATED);
     }
 
-    private function _deleteProjectLabelRequest($urlId, $urlId2)
+    private function _deleteTodoRequest($urlId, $urlId2)
     {
         if (!isset($urlId) || !isset($urlId2))
         {
             $this->httpResponse->setCode(Response::S400_BAD_REQUEST);
             return;
         }
-        $ret = $this->labelManager->labelProjectDelete($urlId, $urlId2);
+        $ret = $this->todoManager->todoProjectDelete($urlId, $urlId2);
         if (!$ret)
             $this->httpResponse->setCode(Response::S404_NOT_FOUND);
         else

@@ -6,16 +6,21 @@ use Nette\Http\Response;
 use Nette\Application\Responses\JsonResponse;
 use Absolute\Core\Presenter\BaseRestPresenter;
 
-class LabelPresenter extends ProjectBasePresenter
+class UserPresenter extends ProjectBasePresenter
 {
 
-    /** @var \Absolute\Module\Label\Manager\LabelManager @inject */
-    public $labelManager;
+    /** @var \Absolute\Module\User\Manager\UserManager @inject */
+    public $userManager;
+
+    /** @var \Absolute\Module\Project\Manager\ProjectManager @inject */
+    public $projectManager;
 
     public function startup()
     {
         parent::startup();
     }
+
+    //LABEL
 
     public function renderDefault($resourceId, $subResourceId)
     {
@@ -27,20 +32,19 @@ class LabelPresenter extends ProjectBasePresenter
                 else
                 {
                     if (isset($subResourceId))
-                    {
-                        $this->_getProjectLabelRequest($resourceId, $subResourceId);
-                    }
+                        $this->_getUserRequest($resourceId, $subResourceId);
                     else
-                    {
-                        $this->_getProjectLabelListRequest($resourceId);
-                    }
+                        $this->_getUserListRequest($resourceId);
                 }
                 break;
+            case 'PUT':
+                $this->_putUserRequest($resourceId, $subResourceId);
+                break;
             case 'POST':
-                $this->_postProjectLabelRequest($resourceId, $subResourceId);
+                $this->_postUserRequest($resourceId, $subResourceId);
                 break;
             case 'DELETE':
-                $this->_deleteProjectLabelRequest($resourceId, $subResourceId);
+                $this->_deleteUserRequest($resourceId, $subResourceId);
             default:
                 break;
         }
@@ -49,25 +53,24 @@ class LabelPresenter extends ProjectBasePresenter
         ));
     }
 
-    //Project
-    private function _getProjectLabelListRequest($idProject)
+    private function _getUserListRequest($idProject)
     {
-        $projectsList = $this->labelManager->getProjectList($idProject);
-        if (!$projectsList)
+        $ret = $this->userManager->getProjectList($idProject);
+        if (!$ret)
             $this->httpResponse->setCode(Response::S404_NOT_FOUND);
         else
         {
             $this->jsonResponse->payload = array_map(function($n)
             {
                 return $n->toJson();
-            }, $projectsList);
+            }, $ret);
             $this->httpResponse->setCode(Response::S200_OK);
         }
     }
 
-    private function _getProjectLabelRequest($projectId, $labelId)
+    private function _getUserRequest($projectId, $userId)
     {
-        $ret = $this->labelManager->getProjectItem($projectId, $labelId);
+        $ret = $this->userManager->getProjectItem($projectId, $userId);
         if (!$ret)
             $this->httpResponse->setCode(Response::S404_NOT_FOUND);
         else
@@ -77,28 +80,45 @@ class LabelPresenter extends ProjectBasePresenter
         }
     }
 
-    private function _postProjectLabelRequest($urlId, $urlId2)
+    private function _putUserRequest($urlId, $urlId2)
     {
         if (!isset($urlId) || !isset($urlId2))
         {
             $this->httpResponse->setCode(Response::S400_BAD_REQUEST);
             return;
         }
-        $ret = $this->labelManager->labelProjectCreate($urlId, $urlId2);
+
+        $post = json_decode($this->httpRequest->getRawBody(), true);
+        $ret = $this->userManager->userProjectUpdate($urlId, $urlId2, $post);
         if (!$ret)
             $this->httpResponse->setCode(Response::S500_INTERNAL_SERVER_ERROR);
         else
             $this->httpResponse->setCode(Response::S201_CREATED);
     }
 
-    private function _deleteProjectLabelRequest($urlId, $urlId2)
+    private function _postUserRequest($urlId, $urlId2)
     {
         if (!isset($urlId) || !isset($urlId2))
         {
             $this->httpResponse->setCode(Response::S400_BAD_REQUEST);
             return;
         }
-        $ret = $this->labelManager->labelProjectDelete($urlId, $urlId2);
+        $post = json_decode($this->httpRequest->getRawBody());
+        $ret = $this->userManager->userProjectCreate($urlId, $urlId2, $post->role, $post->starred);
+        if (!$ret)
+            $this->httpResponse->setCode(Response::S500_INTERNAL_SERVER_ERROR);
+        else
+            $this->httpResponse->setCode(Response::S201_CREATED);
+    }
+
+    private function _deleteUserRequest($urlId, $urlId2)
+    {
+        if (!isset($urlId) || !isset($urlId2))
+        {
+            $this->httpResponse->setCode(Response::S400_BAD_REQUEST);
+            return;
+        }
+        $ret = $this->userManager->userProjectDelete($urlId, $urlId2);
         if (!$ret)
             $this->httpResponse->setCode(Response::S404_NOT_FOUND);
         else

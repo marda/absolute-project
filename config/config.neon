@@ -4,3 +4,5 @@
 #
 
 services:
+  - Absolute\Module\Project\Manager\ProjectManager
+  - Absolute\Module\Project\Manager\ProjectCRUDManager
