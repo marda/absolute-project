@@ -71,7 +71,7 @@ class ProjectManager extends BaseManager
         }
         foreach ($db->related('project_team') as $teamDb)
         {
-            $team = $this->teamManager->_getTeam($teamDb->team);
+            $team = $this->teamManager->getTeam($teamDb->team);
             if ($team)
             {
                 $object->addTeam($team);
@@ -79,7 +79,7 @@ class ProjectManager extends BaseManager
         }
         foreach ($db->related('project_category') as $categoryDb)
         {
-            $category = $this->categoryManager->_getCategory($categoryDb->category);
+            $category = $this->categoryManager->getCategory($categoryDb->category);
             if ($category)
             {
                 $object->addCategory($category);
@@ -87,7 +87,7 @@ class ProjectManager extends BaseManager
         }
         if ($db->ref('file'))
         {
-            $object->setImage($this->fileManager->_getFile($db->ref('file')));
+            $object->setImage($this->fileManager->getFile($db->ref('file')));
         }
         return $object;
     }
@@ -101,7 +101,7 @@ class ProjectManager extends BaseManager
         $object = new User($db->id, $db->username, $db->role, $db->first_name, $db->last_name, $db->email, $db->phone, $db->created);
         if ($db->ref('file'))
         {
-            $object->setImage($this->fileManager->_getFile($db->ref('file')));
+            $object->setImage($this->fileManager->getFile($db->ref('file')));
         }
         return $object;
     }

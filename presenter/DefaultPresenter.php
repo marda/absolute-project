@@ -92,14 +92,49 @@ class DefaultPresenter extends ProjectBasePresenter
 
     private function _postRequest()
     {
-        $post = json_decode($this->httpRequest->getRawBody());
-        $ret = $this->projectCRUDManager->create($post->name, $post->description, $post->status, $post->modules, $post->image);
-        if (!$ret)
+        $post = json_decode($this->httpRequest->getRawBody(),true);
+        $projectId = $this->projectCRUDManager->create($post["name"], $post["description"], $post["status"], $post['modules'], $post["image"]);
+        if (!$projectId)
         {
             $this->httpResponse->setCode(Response::S500_INTERNAL_SERVER_ERROR);
         }
         else
         {
+            if (!isset($post['users']))
+                $post['users'] = null;
+
+            if (!isset($post['owners']))
+                $post['owners'] = null;
+
+            if (!isset($post['managers']))
+                $post['managers'] = null;
+
+            $this->projectCRUDManager->connectUsers($post['users'], $post['managers'], $post['owners'], $projectId);
+
+            if (isset($post['categories']))
+                $this->projectCRUDManager->connectCategories($post['categories'], $projectId);
+
+            if (isset($post['events']))
+                $this->projectCRUDManager->connectEvents($post['events'], $projectId);
+
+            if (isset($post['groups']))
+                $this->projectCRUDManager->connectGroups($post['groups'], $projectId);
+
+            if (isset($post['labels']))
+                $this->projectCRUDManager->connectLabels($post['labels'], $projectId);
+
+            if (isset($post['notes']))
+                $this->projectCRUDManager->connectNotes($post['notes'], $projectId);
+
+            if (isset($post['pages']))
+                $this->projectCRUDManager->connectPages($post['pages'], $projectId);
+
+            if (isset($post['teams']))
+                $this->projectCRUDManager->connectTeams($post['teams'], $projectId);
+
+            if (isset($post['todos']))
+                $this->projectCRUDManager->connectTodos($post['todos'], $projectId);
+            
             $this->httpResponse->setCode(Response::S201_CREATED);
         }
     }

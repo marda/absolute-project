@@ -4,6 +4,7 @@ namespace Absolute\Module\Project\Manager;
 
 use Absolute\Core\Manager\BaseCRUDManager;
 use Absolute\Module\File\Manager\FileCRUDManager;
+use Absolute\Module\Project\Manager\ProjectManager;
 use Nette\Database\Context;
 
 class ProjectCRUDManager extends BaseCRUDManager
@@ -24,6 +25,26 @@ class ProjectCRUDManager extends BaseCRUDManager
 
     public function connectUsers($users, $managers, $owners, $projectId)
     {
+        if($users==null){
+            $users=[];
+            $u=$this->database->table('project_user')->select('id')->where('project_id', $projectId)->where('role','user');
+            foreach ($u as $user)
+                $users[]=$user->id;
+        }
+        if($owners==null){
+            $owners=[];
+            $o=$this->database->table('project_user')->select('id')->where('project_id', $projectId)->where('role','owner');
+            foreach ($o as $owner)
+                $owners[]=$owner->id;
+        }
+        if($managers==null){
+            $managers=[];
+            $u=$this->database->table('project_user')->select('id')->where('project_id', $projectId)->where('role','manager');
+            foreach ($u as $manager)
+                $managers[]=$manager->id;
+        }
+        
+        
         $users = array_unique(array_filter($users));
         $managers = array_unique(array_filter($managers));
         $owners = array_unique(array_filter($owners));
@@ -138,6 +159,132 @@ class ProjectCRUDManager extends BaseCRUDManager
         return true;
     }
 
+    public function connectEvents($events, $projectId)
+    {
+        $events = array_unique(array_filter($events));
+        // DELETE
+        $this->database->table('project_event')->where('project_id', $projectId)->delete();
+        // INSERT NEW
+        $data = [];
+        foreach ($events as $event)
+        {
+            $data[] = [
+                "event_id" => $event,
+                "project_id" => $projectId,
+            ];
+        }
+        if (!empty($data))
+        {
+            $this->database->table("project_event")->insert($data);
+        }
+        return true;
+    }
+
+    public function connectGroups($groups, $projectId)
+    {
+        $groups = array_unique(array_filter($groups));
+        // DELETE
+        $this->database->table('project_group')->where('project_id', $projectId)->delete();
+        // INSERT NEW
+        $data = [];
+        foreach ($groups as $group)
+        {
+            $data[] = [
+                "group_id" => $group,
+                "project_id" => $projectId,
+            ];
+        }
+        if (!empty($data))
+        {
+            $this->database->table("project_group")->insert($data);
+        }
+        return true;
+    }
+
+    public function connectLabels($labels, $projectId)
+    {
+        $labels = array_unique(array_filter($labels));
+        // DELETE
+        $this->database->table('project_label')->where('project_id', $projectId)->delete();
+        // INSERT NEW
+        $data = [];
+        foreach ($labels as $label)
+        {
+            $data[] = [
+                "label_id" => $label,
+                "project_id" => $projectId,
+            ];
+        }
+        if (!empty($data))
+        {
+            $this->database->table("project_label")->insert($data);
+        }
+        return true;
+    }
+
+    public function connectNotes($notes, $projectId)
+    {
+        $notes = array_unique(array_filter($notes));
+        // DELETE
+        $this->database->table('project_note')->where('project_id', $projectId)->delete();
+        // INSERT NEW
+        $data = [];
+        foreach ($notes as $note)
+        {
+            $data[] = [
+                "note_id" => $note,
+                "project_id" => $projectId,
+            ];
+        }
+        if (!empty($data))
+        {
+            $this->database->table("project_note")->insert($data);
+        }
+        return true;
+    }
+
+    public function connectPages($pages, $projectId)
+    {
+        $pages = array_unique(array_filter($pages));
+        // DELETE
+        $this->database->table('project_page')->where('project_id', $projectId)->delete();
+        // INSERT NEW
+        $data = [];
+        foreach ($pages as $page)
+        {
+            $data[] = [
+                "page_id" => $page,
+                "project_id" => $projectId,
+            ];
+        }
+        if (!empty($data))
+        {
+            $this->database->table("project_page")->insert($data);
+        }
+        return true;
+    }
+
+    public function connectTodos($todos, $projectId)
+    {
+        $todos = array_unique(array_filter($todos));
+        // DELETE
+        $this->database->table('project_todo')->where('project_id', $projectId)->delete();
+        // INSERT NEW
+        $data = [];
+        foreach ($todos as $todo)
+        {
+            $data[] = [
+                "todo_id" => $todo,
+                "project_id" => $projectId,
+            ];
+        }
+        if (!empty($data))
+        {
+            $this->database->table("project_todo")->insert($data);
+        }
+        return true;
+    }
+
     public function connectCategories($categories, $projectId)
     {
         $categories = array_unique(array_filter($categories));
@@ -207,10 +354,43 @@ class ProjectCRUDManager extends BaseCRUDManager
         return $this->database->table('project')->where('id', $id)->delete();
     }
 
-    public function update($id, $post)
+    public function update($projectId, $post)
     {
+        if(!isset($post['users']))
+            $post['users']=null;
         
+        if(!isset($post['owners']))
+            $post['owners']=null;
         
+        if(!isset($post['managers']))
+            $post['managers']=null;
+        
+        $this->connectUsers ($post['users'], $post['managers'], $post['owners'], $projectId);
+        
+        if(isset($post['categories']))
+            $this->connectCategories ($post['categories'], $projectId);
+        
+        if(isset($post['events']))
+            $this->connectEvents ($post['events'], $projectId);
+        
+        if(isset($post['groups']))
+            $this->connectGroups ($post['groups'], $projectId);
+        
+        if(isset($post['labels']))
+            $this->connectLabels ($post['labels'], $projectId);
+        
+        if(isset($post['notes']))
+            $this->connectNotes ($post['notes'], $projectId);
+        
+        if(isset($post['pages']))
+            $this->connectPages ($post['pages'], $projectId);
+        
+        if(isset($post['teams']))
+            $this->connectTeams ($post['teams'], $projectId);
+        
+        if(isset($post['todos']))
+            $this->connectTodos ($post['todos'], $projectId);
+                
         if (isset($post['image']))
         {
             $fileId = $this->fileCRUDManager->createFromBase64($post['image'], "", "/images/projects/");
@@ -218,6 +398,18 @@ class ProjectCRUDManager extends BaseCRUDManager
         }
         else
             $fileId = null;
+        
+        unset($post['owners']);
+        unset($post['managers']);
+        unset($post['users']);
+        unset($post['categories']);
+        unset($post['events']);
+        unset($post['groups']);
+        unset($post['labels']);
+        unset($post['notes']);
+        unset($post['pages']);
+        unset($post['teams']);
+        unset($post['todos']);
         
         unset($post['id']);
         unset($post['created']);
@@ -229,7 +421,7 @@ class ProjectCRUDManager extends BaseCRUDManager
         if(isset($post['modules']))
             $post['modules']=serialize($post['modules']);
         
-        return $this->database->table('project')->where('id', $id)->update($post);
+        return $this->database->table('project')->where('id', $projectId)->update($post);
     }
 
     public function updateChannelId($id, $channelId)
